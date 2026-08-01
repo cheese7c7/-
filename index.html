@@ -1,85 +1,814 @@
 <!doctype html>
 <html lang="zh-CN">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>今天吃什么</title>
-    <meta name="description" content="按 Figma Frame 12 还原的今天吃什么 App 首页。" />
-    <link rel="stylesheet" href="./styles.css" />
-  </head>
-  <body>
-    <main class="app-shell">
-      <section class="app-frame" aria-label="今天吃什么">
-        <h1 class="logo">EAT</h1>
-
-        <div class="food-row food-row-top" aria-hidden="true">
-          <div class="food-track">
-            <div class="food-tile">
-              <img class="food-img strawberry" src="./assets/figma-frame-12/strawberry.png" alt="" />
-            </div>
-            <div class="food-tile">
-              <img class="food-img pie" src="./assets/figma-frame-12/pie.png" alt="" />
-            </div>
-            <div class="food-tile">
-              <img class="food-img strawberry-big" src="./assets/figma-frame-12/strawberry.png" alt="" />
-            </div>
-            <div class="food-tile"></div>
-            <div class="food-tile">
-              <img class="food-img strawberry" src="./assets/figma-frame-12/strawberry.png" alt="" />
-            </div>
-            <div class="food-tile">
-              <img class="food-img pie" src="./assets/figma-frame-12/pie.png" alt="" />
-            </div>
-            <div class="food-tile">
-              <img class="food-img strawberry-big" src="./assets/figma-frame-12/strawberry.png" alt="" />
-            </div>
-            <div class="food-tile"></div>
-          </div>
-        </div>
-
-        <div class="food-row food-row-bottom" aria-hidden="true">
-          <div class="food-tile">
-            <img class="food-img cupcake" src="./assets/figma-frame-12/cupcake.png" alt="" />
-          </div>
-          <div class="food-tile">
-            <img class="food-img chick" src="./assets/figma-frame-12/chick.png" alt="" />
-          </div>
-          <div class="food-tile">
-            <img class="food-img blueberry" src="./assets/figma-frame-12/blueberry.png" alt="" />
-          </div>
-          <div class="food-tile"></div>
-        </div>
-
-        <section class="panel">
-          <div class="title-block">
-            <p>看你心情</p>
-            <p>今天想吃啥</p>
-            <img src="./assets/figma-frame-12/green-stroke.svg" alt="" />
-          </div>
-
-          <div class="choice-area" aria-label="选择吃饭心情">
-            <button class="choice-card" type="button">
-              <span>随便</span>
-              <span>吃点</span>
-            </button>
-            <button class="choice-card is-active" type="button">
-              <span>正在</span>
-              <span>纠结</span>
-            </button>
-            <button class="choice-card" type="button">
-              <span>整点</span>
-              <span>好的</span>
-            </button>
-          </div>
-
-          <button class="pick-button" id="pickButton" type="button">
-            <span class="chance-dot" id="chanceCount">9</span>
-            <span id="pickText">帮我选</span>
-          </button>
-        </section>
-      </section>
-    </main>
-
-    <script src="./app.js"></script>
-  </body>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Frame 14</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; margin: 0; }
+    body {
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: #e9e9ed;
+    }
+    .preview {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 375 / 812;
+      border: 0;
+      background: #f5f5f7;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, .16);
+    }
+    .phone {
+      position: relative;
+      width: min(375px, 100%);
+      aspect-ratio: 375 / 812;
+      overflow: hidden;
+    }
+    .carousel-row {
+      position: absolute;
+      left: 0;
+      z-index: 2;
+      width: 100%;
+      height: 12.562%;
+      overflow: hidden;
+      background: #f5f5f7;
+    }
+    .carousel-row.top { top: 12.931%; }
+    .carousel-row.bottom { top: 28.571%; }
+    .carousel-track {
+      display: flex;
+      width: 201.6%;
+      height: 100%;
+      will-change: transform;
+    }
+    .carousel-track img {
+      display: block;
+      flex: 0 0 50%;
+      width: 50%;
+      height: 100%;
+    }
+    .top .carousel-track { animation: move-left 13s linear infinite; }
+    .bottom .carousel-track { animation: move-right 13s linear infinite; }
+    .choice-cleaner,
+    .middle-unselected {
+      position: absolute;
+      z-index: 3;
+      display: none;
+      background: #fff;
+      pointer-events: none;
+    }
+    .choice-cleaner.left {
+      top: 70.813%;
+      left: 6.4%;
+      width: 30.133%;
+      height: 15.517%;
+    }
+    .choice-cleaner.middle {
+      top: 70.813%;
+      left: 34.4%;
+      width: 32%;
+      height: 15.517%;
+    }
+    .choice-cleaner.right {
+      top: 70.813%;
+      left: 65.6%;
+      width: 31.2%;
+      height: 15.517%;
+    }
+    .selected-art {
+      position: absolute;
+      top: 70.813%;
+      left: 6.4%;
+      z-index: 4;
+      display: none;
+      width: 30.133%;
+      height: auto;
+      pointer-events: none;
+    }
+    .selected-art.right {
+      top: 70.69%;
+      left: 66.133%;
+      width: 31.2%;
+    }
+    .middle-unselected {
+      top: 72.414%;
+      left: 36%;
+      z-index: 4;
+      width: 25.067%;
+      height: 12.315%;
+      border: 2px solid #eaeaea;
+      border-radius: 15px;
+      color: #050505;
+      font-family: "Microsoft YaHei", sans-serif;
+      font-size: clamp(12px, 4.267vw, 16px);
+      font-weight: 700;
+      line-height: 1.35;
+      text-align: center;
+    }
+    .middle-unselected .eyes {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin: 20% 0 9%;
+    }
+    .middle-unselected .eye {
+      width: 8px;
+      height: 7px;
+      border-radius: 5px 5px 6px 6px;
+      background: #050505;
+      transform: rotate(10deg);
+    }
+    .middle-unselected .eye + .eye { transform: rotate(-10deg); }
+    .choice-trigger {
+      position: absolute;
+      top: 72.414%;
+      z-index: 5;
+      width: 25.067%;
+      height: 12.315%;
+      padding: 0;
+      border: 0;
+      border-radius: 15px;
+      background: transparent;
+      cursor: pointer;
+    }
+    .choice-trigger.left { left: 7.813%; }
+    .choice-trigger.middle { left: 38.4%; }
+    .choice-trigger.right { left: 67.2%; }
+    .choose-trigger {
+      position: absolute;
+      top: 89.409%;
+      left: 7.733%;
+      z-index: 6;
+      width: 84.8%;
+      height: 6.897%;
+      padding: 0;
+      border: 0;
+      border-radius: 9px;
+      background: transparent;
+      cursor: pointer;
+    }
+    .choose-trigger:focus-visible {
+      outline: 3px solid #1677ff;
+      outline-offset: 3px;
+    }
+    .result-screen {
+      position: absolute;
+      inset: 0;
+      z-index: 20;
+      display: none;
+      width: 100%;
+      height: 100%;
+      background: #f5f5f7;
+    }
+    .back-trigger {
+      position: absolute;
+      top: 3.448%;
+      left: 1.6%;
+      z-index: 21;
+      display: none;
+      width: 10.667%;
+      height: 6.158%;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+    }
+    .phone.show-result .result-screen { display: block; }
+    .phone.show-result .back-trigger { display: block; }
+    .food-variant {
+      position: absolute;
+      top: 30.172%;
+      left: 12.533%;
+      z-index: 21;
+      display: none;
+      width: 80.8%;
+      height: 36.946%;
+      overflow: hidden;
+      background: #fff;
+      pointer-events: none;
+    }
+    .food-variant::before {
+      content: "EATEAT\A EATEAT\A EATEAT";
+      position: absolute;
+      inset: 7% 4%;
+      color: #e8e8e8;
+      font: 900 34px/1.15 Arial, sans-serif;
+      text-align: center;
+      white-space: pre;
+    }
+    .food-variant img {
+      position: absolute;
+      inset: 3% 2% 9%;
+      width: 96%;
+      height: 88%;
+      object-fit: contain;
+    }
+    .food-label {
+      position: absolute;
+      right: 2.5%;
+      bottom: 4%;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      min-width: 34%;
+      min-height: 19%;
+      padding: 0 14px 0 0;
+      border-radius: 28px;
+      color: #fff;
+      background: #08090c;
+      font: 700 18px/1 "Microsoft YaHei", sans-serif;
+    }
+    .food-label::before {
+      content: "";
+      width: 21px;
+      height: 21px;
+      margin-left: -4px;
+      border-radius: 50%;
+      background: #ffdf00;
+    }
+    .phone.show-result.has-food-variant .result-food-variant { display: block; }
+    .reselect-trigger {
+      position: absolute;
+      top: 92.734%;
+      left: 5.067%;
+      z-index: 22;
+      display: none;
+      width: 27.467%;
+      height: 6.158%;
+      padding: 0;
+      border: 0;
+      border-radius: 16px;
+      background: transparent;
+      cursor: pointer;
+    }
+    .phone.show-result .reselect-trigger { display: block; }
+    .result-count {
+      position: absolute;
+      top: 94.212%;
+      left: 9.867%;
+      z-index: 23;
+      display: none;
+      width: 25px;
+      height: 25px;
+      border-radius: 50%;
+      color: #050505;
+      background: #ffdf00;
+      font: 700 14px/25px Arial, sans-serif;
+      text-align: center;
+      pointer-events: none;
+    }
+    .phone.show-result .result-count { display: block; }
+    .result-date {
+      position: absolute;
+      top: 71.798%;
+      left: 11.467%;
+      z-index: 23;
+      display: none;
+      width: 34%;
+      height: 11.084%;
+      padding-top: 5px;
+      color: #08090c;
+      background: #fff;
+      font-family: Arial, sans-serif;
+      pointer-events: none;
+    }
+    .result-date .date-meta {
+      display: flex;
+      gap: 16px;
+      font-size: 14px;
+      line-height: 1.3;
+    }
+    .result-date .date-value {
+      margin-top: 2px;
+      font-size: 31px;
+      font-weight: 700;
+      line-height: 1.1;
+    }
+    .phone.show-result .result-date { display: block; }
+    .retry-screen {
+      position: absolute;
+      inset: 0;
+      z-index: 40;
+      display: none;
+      width: 100%;
+      height: 100%;
+      background: #f5f5f7;
+    }
+    .phone.show-retry .retry-screen { display: block; }
+    .retry-food-blur {
+      position: absolute;
+      top: 26%;
+      left: 0;
+      z-index: 41;
+      display: none;
+      width: 100%;
+      height: 14%;
+      overflow: hidden;
+      -webkit-mask-image: radial-gradient(ellipse at center, #000 34%, rgba(0, 0, 0, .86) 52%, transparent 82%);
+      mask-image: radial-gradient(ellipse at center, #000 34%, rgba(0, 0, 0, .86) 52%, transparent 82%);
+      pointer-events: none;
+    }
+    .retry-food-blur img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: blur(14px);
+      transform: scale(1.13);
+    }
+    .phone.show-retry .retry-food-blur { display: block; }
+    .retry-choice-cleaner,
+    .retry-middle-unselected,
+    .retry-selected-left {
+      position: absolute;
+      z-index: 42;
+      display: none;
+      pointer-events: none;
+    }
+    .retry-choice-cleaner {
+      top: 60.714%;
+      height: 17.241%;
+      background: #fff;
+    }
+    .retry-choice-cleaner.left { left: 0; width: 32%; }
+    .retry-choice-cleaner.middle { left: 31.2%; width: 37%; }
+    .retry-choice-cleaner.right { left: 65.6%; width: 34.4%; }
+    .retry-selected-left {
+      top: 60.714%;
+      left: .8%;
+      z-index: 43;
+      width: 30.133%;
+      height: auto;
+    }
+    .retry-selected-right {
+      position: absolute;
+      top: 60.591%;
+      left: 66.133%;
+      z-index: 43;
+      display: none;
+      width: 31.2%;
+      height: auto;
+      pointer-events: none;
+    }
+    .retry-middle-unselected {
+      top: 63.916%;
+      left: 36%;
+      z-index: 43;
+      width: 27.733%;
+      height: 12.315%;
+      border: 2px solid #eaeaea;
+      border-radius: 15px;
+      color: #050505;
+      background: #fff;
+      font: 700 16px/1.35 "Microsoft YaHei", sans-serif;
+      text-align: center;
+    }
+    .retry-middle-unselected .retry-eyes {
+      display: flex;
+      justify-content: center;
+      gap: 13px;
+      margin: 19px 0 8px;
+    }
+    .retry-middle-unselected .retry-eye {
+      width: 8px;
+      height: 7px;
+      border-radius: 5px;
+      background: #050505;
+    }
+    .retry-left-trigger {
+      position: absolute;
+      top: 63.916%;
+      left: 2.667%;
+      z-index: 45;
+      display: none;
+      width: 27.733%;
+      height: 12.315%;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+    }
+    .retry-middle-trigger {
+      position: absolute;
+      top: 63.916%;
+      left: 36%;
+      z-index: 45;
+      display: none;
+      width: 27.733%;
+      height: 12.315%;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+    }
+    .retry-right-trigger {
+      position: absolute;
+      top: 63.916%;
+      left: 69.333%;
+      z-index: 45;
+      display: none;
+      width: 27.733%;
+      height: 12.315%;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+    }
+    .phone.show-retry .retry-left-trigger,
+    .phone.show-retry .retry-middle-trigger,
+    .phone.show-retry .retry-right-trigger { display: block; }
+    .phone.retry-left-selected .retry-choice-cleaner.left,
+    .phone.retry-left-selected .retry-choice-cleaner.middle,
+    .phone.retry-left-selected .retry-middle-unselected,
+    .phone.retry-left-selected .retry-selected-left,
+    .phone.retry-right-selected .retry-choice-cleaner.middle,
+    .phone.retry-right-selected .retry-choice-cleaner.right,
+    .phone.retry-right-selected .retry-middle-unselected,
+    .phone.retry-right-selected .retry-selected-right { display: block; }
+    .retry-count {
+      position: absolute;
+      top: 83.005%;
+      left: 37.6%;
+      z-index: 44;
+      display: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      color: #050505;
+      background: #ffdf00;
+      font: 700 18px/32px Arial, sans-serif;
+      text-align: center;
+      pointer-events: none;
+    }
+    .retry-note {
+      position: absolute;
+      top: 91.01%;
+      left: 18%;
+      z-index: 44;
+      display: none;
+      width: 64%;
+      padding: 3px 0;
+      color: #a7a7a7;
+      background: #fff;
+      font: 12px/1.4 "Microsoft YaHei", sans-serif;
+      text-align: center;
+      pointer-events: none;
+    }
+    .phone.show-retry .retry-count,
+    .phone.show-retry .retry-note { display: block; }
+    .retry-submit-trigger {
+      position: absolute;
+      top: 81.65%;
+      left: 2.667%;
+      z-index: 46;
+      display: none;
+      width: 94.667%;
+      height: 9.852%;
+      padding: 0;
+      border: 0;
+      border-radius: 26px;
+      background: transparent;
+      cursor: pointer;
+    }
+    .phone.show-retry .retry-submit-trigger { display: block; }
+    .share-trigger {
+      position: absolute;
+      top: 92.734%;
+      left: 34.933%;
+      z-index: 22;
+      display: none;
+      width: 60%;
+      height: 6.158%;
+      padding: 0;
+      border: 0;
+      border-radius: 16px;
+      background: transparent;
+      cursor: pointer;
+    }
+    .phone.show-result .share-trigger { display: block; }
+    .share-screen {
+      position: absolute;
+      inset: 0;
+      z-index: 30;
+      display: none;
+      width: 100%;
+      height: 100%;
+      background: #fff;
+    }
+    .share-close {
+      position: absolute;
+      top: 66.995%;
+      left: 40%;
+      z-index: 31;
+      display: none;
+      width: 20%;
+      height: 10.099%;
+      padding: 0;
+      border: 0;
+      border-radius: 50%;
+      background: transparent;
+      cursor: pointer;
+    }
+    .share-food-match {
+      position: absolute;
+      top: 30.172%;
+      left: 12.533%;
+      z-index: 31;
+      display: none;
+      width: 74.933%;
+      height: 36.946%;
+      object-fit: fill;
+      background: #fff;
+      box-shadow: 0 -55px 0 #fff;
+      pointer-events: none;
+    }
+    .share-title {
+      position: absolute;
+      top: 16.8%;
+      left: 14%;
+      z-index: 33;
+      display: none;
+      width: 72%;
+      padding: 7px 0 9px;
+      color: #050505;
+      background: #fff;
+      font: 700 22px/1.42 "Microsoft YaHei", sans-serif;
+      text-align: center;
+      pointer-events: none;
+    }
+    .share-title .accent {
+      position: relative;
+      z-index: 1;
+    }
+    .share-title .accent::after {
+      content: "";
+      position: absolute;
+      right: -2px;
+      bottom: 1px;
+      left: -2px;
+      z-index: -1;
+      height: 5px;
+      border-radius: 4px;
+      background: #28e51c;
+      transform: rotate(-2deg);
+    }
+    .share-back-date {
+      position: absolute;
+      top: 62.315%;
+      left: 9.333%;
+      z-index: 34;
+      display: none;
+      width: 80.533%;
+      height: 8.867%;
+      padding: 10px 0 0 14px;
+      border-radius: 0 0 28px 28px;
+      color: #050505;
+      background: #fff;
+      font: 700 28px/1.15 Arial, sans-serif;
+      box-sizing: border-box;
+      pointer-events: none;
+    }
+    .share-back-date::after {
+      content: "";
+      position: absolute;
+      top: 100%;
+      left: 0;
+      width: 42%;
+      height: 58px;
+      background: #333;
+      pointer-events: none;
+    }
+    .share-food-variant {
+      left: 12.533%;
+      z-index: 35;
+      width: 74.933%;
+    }
+    .share-food-variant .food-label {
+      right: 2%;
+      z-index: 2;
+      max-width: 58%;
+      min-width: 38%;
+      padding-right: 12px;
+      font-size: 16px;
+      white-space: nowrap;
+      box-sizing: border-box;
+    }
+    .phone.show-share .share-screen,
+    .phone.show-share .share-close,
+    .phone.show-share .share-food-match,
+    .phone.show-share .share-title,
+    .phone.show-share .share-back-date { display: block; }
+    .phone.show-share.has-food-variant .share-food-variant { display: block; }
+    .choice-trigger:focus-visible {
+      outline: 3px solid #1677ff;
+      outline-offset: 3px;
+    }
+    .phone.is-left-selected .choice-cleaner.left,
+    .phone.is-left-selected .choice-cleaner.middle,
+    .phone.is-left-selected .middle-unselected,
+    .phone.is-left-selected .selected-art.left,
+    .phone.is-right-selected .choice-cleaner.middle,
+    .phone.is-right-selected .choice-cleaner.right,
+    .phone.is-right-selected .middle-unselected,
+    .phone.is-right-selected .selected-art.right { display: block; }
+    @keyframes move-left {
+      from { transform: translateX(0); }
+      to { transform: translateX(-50%); }
+    }
+    @keyframes move-right {
+      from { transform: translateX(-50%); }
+      to { transform: translateX(0); }
+    }
+  </style>
+</head>
+<body>
+  <main class="phone">
+    <object class="preview" data="Frame 14.svg" type="image/svg+xml" aria-label="Frame 14 SVG 预览">
+      您的浏览器无法显示 SVG，请直接打开 Frame 14.svg。
+    </object>
+    <div class="carousel-row top" aria-hidden="true">
+      <div class="carousel-track">
+        <img src="Frame14-top-lite.svg" alt="">
+        <img src="Frame14-top-lite.svg" alt="">
+      </div>
+    </div>
+    <div class="carousel-row bottom" aria-hidden="true">
+      <div class="carousel-track">
+        <img src="Frame14-bottom-lite.svg" alt="">
+        <img src="Frame14-bottom-lite.svg" alt="">
+      </div>
+    </div>
+    <div class="choice-cleaner left" aria-hidden="true"></div>
+    <div class="choice-cleaner middle" aria-hidden="true"></div>
+    <div class="choice-cleaner right" aria-hidden="true"></div>
+    <img class="selected-art left" src="Group 10.svg" alt="">
+    <img class="selected-art right" src="选中面包.svg" alt="">
+    <div class="middle-unselected" aria-hidden="true">
+      <div class="eyes"><span class="eye"></span><span class="eye"></span></div>
+      正在<br>纠结
+    </div>
+    <button class="choice-trigger left" type="button" aria-label="选择随便吃点" aria-pressed="false"></button>
+    <button class="choice-trigger middle" type="button" aria-label="选择正在纠结" aria-pressed="true"></button>
+    <button class="choice-trigger right" type="button" aria-label="选择整点好的" aria-pressed="false"></button>
+    <button class="choose-trigger" type="button" aria-label="帮我选"></button>
+    <img class="result-screen" src="Frame17-lite.svg" alt="帮我选结果">
+    <div class="food-variant result-food-variant" aria-hidden="true">
+      <img src="foods/food-01-spicy-stir-fry.webp" alt="">
+      <span class="food-label">麻辣香锅</span>
+    </div>
+    <button class="back-trigger" type="button" aria-label="返回上一页"></button>
+    <button class="reselect-trigger" type="button" aria-label="重选食物"></button>
+    <div class="result-count" aria-hidden="true">8</div>
+    <div class="result-date" aria-label="当前日期">
+      <div class="date-meta"><span>TIME</span><span class="date-year"></span></div>
+      <div class="date-value"></div>
+    </div>
+    <img class="retry-screen" src="assets/Frame 16-hd.webp" alt="重新选择界面">
+    <div class="retry-food-blur" aria-hidden="true"><img src="Frame17-share-food-lite.svg" alt=""></div>
+    <div class="retry-choice-cleaner left" aria-hidden="true"></div>
+    <div class="retry-choice-cleaner middle" aria-hidden="true"></div>
+    <div class="retry-choice-cleaner right" aria-hidden="true"></div>
+    <img class="retry-selected-left" src="Group 10.svg" alt="随便吃点已选中">
+    <img class="retry-selected-right" src="选中面包.svg" alt="整点好的已选中">
+    <div class="retry-middle-unselected" aria-hidden="true">
+      <div class="retry-eyes"><span class="retry-eye"></span><span class="retry-eye"></span></div>
+      正在<br>纠结
+    </div>
+    <button class="retry-left-trigger" type="button" aria-label="选择随便吃点"></button>
+    <button class="retry-middle-trigger" type="button" aria-label="选择正在纠结"></button>
+    <button class="retry-right-trigger" type="button" aria-label="选择整点好的"></button>
+    <div class="retry-count" aria-hidden="true">8</div>
+    <div class="retry-note" aria-hidden="true">快点选好吃饭吧，还有8次机会哦</div>
+    <button class="retry-submit-trigger" type="button" aria-label="重新选择并查看结果"></button>
+    <button class="share-trigger" type="button" aria-label="分享"></button>
+    <img class="share-screen" src="assets/Frame 15-share-hd.webp" alt="分享界面">
+    <div class="share-title"><span>钱<span class="accent">可以再赚</span></span><br>快乐要及时</div>
+    <div class="share-back-date" aria-label="当前日期"></div>
+    <img class="share-food-match" src="Frame17-share-food-lite.svg" alt="烧烤">
+    <div class="food-variant share-food-variant" aria-hidden="true">
+      <img src="foods/food-01-spicy-stir-fry.webp" alt="">
+      <span class="food-label">麻辣香锅</span>
+    </div>
+    <button class="share-close" type="button" aria-label="关闭分享界面"></button>
+  </main>
+  <script>
+    const phone = document.querySelector('.phone');
+    const leftChoice = document.querySelector('.choice-trigger.left');
+    const middleChoice = document.querySelector('.choice-trigger.middle');
+    const rightChoice = document.querySelector('.choice-trigger.right');
+    const chooseButton = document.querySelector('.choose-trigger');
+    const backButton = document.querySelector('.back-trigger');
+    const shareButton = document.querySelector('.share-trigger');
+    const shareClose = document.querySelector('.share-close');
+    const reselectButton = document.querySelector('.reselect-trigger');
+    const retryLeftButton = document.querySelector('.retry-left-trigger');
+    const retryMiddleButton = document.querySelector('.retry-middle-trigger');
+    const retryRightButton = document.querySelector('.retry-right-trigger');
+    const retrySubmitButton = document.querySelector('.retry-submit-trigger');
+    const resultCount = document.querySelector('.result-count');
+    const retryCount = document.querySelector('.retry-count');
+    const retryNote = document.querySelector('.retry-note');
+    const dateYear = document.querySelector('.date-year');
+    const dateValue = document.querySelector('.date-value');
+    const shareBackDate = document.querySelector('.share-back-date');
+    const currentDate = new Date();
+    dateYear.textContent = String(currentDate.getFullYear());
+    dateValue.textContent = `${String(currentDate.getMonth() + 1).padStart(2, '0')}/${String(currentDate.getDate()).padStart(2, '0')}`;
+    shareBackDate.textContent = dateValue.textContent;
+    const variantImages = document.querySelectorAll('.food-variant img');
+    const variantLabels = document.querySelectorAll('.food-label');
+    const foods = [
+      { src: '', name: '烧烤' },
+      { src: 'foods/food-01-spicy-stir-fry.webp', name: '麻辣香锅' },
+      { src: 'foods/food-03-chicken-pot.webp', name: '香菇鸡煲' },
+      { src: 'foods/food-02-pickled-fish.webp', name: '酸菜鱼' },
+      { src: 'foods/food-04-claypot-rice.webp', name: '煲仔饭' },
+      { src: 'foods/food-05-dumplings.webp', name: '水饺' },
+      { src: 'foods/food-06-noodles.webp', name: '招牌拌面' },
+      { src: 'foods/food-07-sushi.webp', name: '寿司拼盘' },
+      { src: 'foods/food-10-chicken-rice.webp', name: '鸡肉盖饭' }
+    ];
+    let foodIndex = 0;
+    let remainingCount = 8;
+    function updateRemainingCount() {
+      resultCount.textContent = String(remainingCount);
+      retryCount.textContent = String(remainingCount);
+      retryNote.textContent = `快点选好吃饭吧，还有${remainingCount}次机会哦`;
+      reselectButton.disabled = remainingCount <= 0;
+      reselectButton.setAttribute('aria-disabled', String(remainingCount <= 0));
+    }
+    function randomizeFood() {
+      let nextIndex;
+      do {
+        nextIndex = Math.floor(Math.random() * foods.length);
+      } while (foods.length > 1 && nextIndex === foodIndex);
+      foodIndex = nextIndex;
+      const food = foods[foodIndex];
+      phone.classList.toggle('has-food-variant', foodIndex !== 0);
+      if (foodIndex !== 0) {
+        variantImages.forEach((image) => { image.src = food.src; });
+        variantLabels.forEach((label) => { label.textContent = food.name; });
+      }
+    }
+    function selectChoice(choice) {
+      phone.classList.toggle('is-left-selected', choice === 'left');
+      phone.classList.toggle('is-right-selected', choice === 'right');
+      leftChoice.setAttribute('aria-pressed', String(choice === 'left'));
+      middleChoice.setAttribute('aria-pressed', String(choice === 'middle'));
+      rightChoice.setAttribute('aria-pressed', String(choice === 'right'));
+    }
+    leftChoice.addEventListener('click', () => {
+      selectChoice('left');
+    });
+    middleChoice.addEventListener('click', () => {
+      selectChoice('middle');
+    });
+    rightChoice.addEventListener('click', () => {
+      selectChoice('right');
+    });
+    chooseButton.addEventListener('click', () => {
+      randomizeFood();
+      phone.classList.add('show-result');
+    });
+    backButton.addEventListener('click', () => {
+      remainingCount = 9;
+      updateRemainingCount();
+      phone.classList.remove('show-result');
+    });
+    shareButton.addEventListener('click', () => {
+      phone.classList.add('show-share');
+    });
+    shareClose.addEventListener('click', () => {
+      phone.classList.remove('show-share');
+    });
+    reselectButton.addEventListener('click', () => {
+      if (remainingCount <= 0) return;
+      phone.classList.add('show-retry');
+    });
+    retryLeftButton.addEventListener('click', () => {
+      phone.classList.add('retry-left-selected');
+      phone.classList.remove('retry-right-selected');
+    });
+    retryMiddleButton.addEventListener('click', () => {
+      phone.classList.remove('retry-left-selected');
+      phone.classList.remove('retry-right-selected');
+    });
+    retryRightButton.addEventListener('click', () => {
+      phone.classList.remove('retry-left-selected');
+      phone.classList.add('retry-right-selected');
+    });
+    retrySubmitButton.addEventListener('click', () => {
+      if (remainingCount <= 0) return;
+      remainingCount = Math.max(0, remainingCount - 1);
+      updateRemainingCount();
+      randomizeFood();
+      phone.classList.remove('show-retry');
+      phone.classList.remove('retry-left-selected', 'retry-right-selected');
+      phone.classList.add('show-result');
+    });
+  </script>
+</body>
 </html>
